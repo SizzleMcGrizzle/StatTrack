@@ -5,9 +5,8 @@ author: sizzlemcgrizzle
 version: ${project.version}
 depend:
   - WorldGuard
+  - CLStuff
 commands:
-  makeStatTrack:
-    description: Makes the held item stattrackable
   deathMessageReload:
     description: Reloads death messages from file
   getStats:
