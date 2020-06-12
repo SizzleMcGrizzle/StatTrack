@@ -1,0 +1,16 @@
+name: StatTrack
+main: me.sizzlemcgrizzle.stattrack.StatTrackPlugin
+api-version: 1.14
+author: sizzlemcgrizzle
+version: ${project.version}
+depend:
+  - WorldGuard
+commands:
+  makeStatTrack:
+    description: Makes the held item stattrackable
+  deathMessageReload:
+    description: Reloads death messages from file
+  getStats:
+    description: Gets the item statistics for the item in hand
+  getStatsByID:
+    description: Gets the item statistics for the specified UUID
