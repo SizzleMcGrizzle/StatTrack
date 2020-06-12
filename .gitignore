@@ -167,4 +167,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
  
+build.xml
+
 # End of https://www.gitignore.io/api/osx,java,eclipse,intellij,maven
