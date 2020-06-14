@@ -43,14 +43,12 @@ public abstract class StatTrackItem implements ConfigurationSerializable {
     public abstract List<String> getStatsDisplay();
     
     public static boolean isStatTrackItem(ItemStack item) {
-        return item.getItemMeta().getLore() != null
-                && item.getItemMeta().getLore().stream().anyMatch(lore -> lore.contains("ID: "))
-                && StatTrackPlugin.instance.getStatTrackItems().stream()
-                .anyMatch(i -> item.getItemMeta().getLore().stream().filter(line -> line.contains("ID: ")).findFirst().get().contains(i.getUUID().toString()));
+        StatTrackID id = StatTrackPlugin.getNbtID(item);
+        return id != null && StatTrackPlugin.instance.getStatTrackItems().stream().anyMatch(i -> i.getUUID().equals(id));
     }
     
     public static StatTrackItem getStatTrackItem(ItemStack item) {
-        StatTrackID uuid = StatTrackID.fromString(item.getItemMeta().getLore().stream().filter(line -> line.contains("ID: ")).findFirst().get().replace("§8ID: ", ""));
-        return StatTrackPlugin.instance.getStatTrackItems().stream().filter(i -> i.getUUID().equals(uuid)).findFirst().get();
+        StatTrackID id = StatTrackPlugin.getNbtID(item);
+        return StatTrackPlugin.instance.getStatTrackItems().stream().filter(i -> i.getUUID().equals(id)).findFirst().get();
     }
 }

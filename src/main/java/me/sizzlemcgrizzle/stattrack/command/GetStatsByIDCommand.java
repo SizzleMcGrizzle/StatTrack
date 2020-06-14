@@ -23,7 +23,7 @@ public class GetStatsByIDCommand implements CommandExecutor, TabExecutor {
         Player player = (Player) sender;
         
         if (args.length == 0) {
-            player.sendMessage(StatTrackPlugin.PREFIX + "You must specify a UUID!");
+            player.sendMessage(StatTrackPlugin.PREFIX + "You must specify an StatTrack™ ID!");
             return false;
         }
         

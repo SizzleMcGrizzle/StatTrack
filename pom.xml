@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.sizzlemcgrizzle</groupId>
     <artifactId>stattrack</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>StatTrack</name>
 
     <repositories>
@@ -56,7 +56,7 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-        <finalName>${project.name}</finalName>
+        <finalName>${project.name}$-{project.version}</finalName>
 
         <plugins>
             <plugin>

@@ -9,7 +9,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import de.craftlancer.clstuff.WGNoDropFlag;
 import de.craftlancer.core.NMSUtils;
-import me.sizzlemcgrizzle.stattrack.StatTrackID;
 import me.sizzlemcgrizzle.stattrack.StatTrackItem;
 import me.sizzlemcgrizzle.stattrack.StatTrackPlugin;
 import me.sizzlemcgrizzle.stattrack.path.StatTrackWeaponPath;
@@ -41,12 +40,17 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class DeathMessageListener implements Listener {
     
+    private static final String PUMPKINBANDIT_NAME = "PumpkinBandit";
+    private static final int PUMPKINBANDIT_MODEL_DATA = 4;
+    
     private HashMap<Player, ItemStack> lastBowShotMap = new HashMap<>();
     private HashMap<Player, ItemStack> lastTridentThrownMap = new HashMap<>();
+    private HashMap<UUID, EntityDamageEvent.DamageCause> lastDamageCause = new HashMap<>();
     
     private RegionContainer container;
     
@@ -67,90 +71,79 @@ public class DeathMessageListener implements Listener {
         
         Player player = (Player) event.getEntity();
         
-        if (player.getHealth() - event.getDamage() > 0)
-            return;
-        
-        if (cause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
-                || cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || cause == EntityDamageEvent.DamageCause.PROJECTILE)
-            return;
-        
-        String message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToNonLivingEntityMessage(cause);
-        
-        message = message.replaceAll("\"", "'");
-        message = message.replaceAll("%player%", player.getName());
-        
-        broadcast(ChatColor.translateAlternateColorCodes('&', message));
-    }
-    
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        EntityDamageEvent.DamageCause cause = event.getCause();
-        Entity d = event.getDamager();
-        
-        if (!(event.getEntity() instanceof Player))
-            return;
-        
-        Player victim = (Player) event.getEntity();
-        
-        if (victim.getHealth() - event.getDamage() > 0)
-            return;
-        
-        if (cause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
-                && cause != EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                && cause != EntityDamageEvent.DamageCause.PROJECTILE)
-            return;
-        
-        LivingEntity killer;
-        String reason;
-        if (cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK)
-            if (d instanceof Player) {
-                killer = ((Player) d);
-                reason = "player_attack";
-            } else {
-                killer = (LivingEntity) d;
-                reason = "entity_attack";
-            }
-        else if (cause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
-            if (d instanceof Player) {
-                killer = ((Player) d);
-                reason = "entity_sweep_attack";
-            } else {
-                killer = (LivingEntity) d;
-                reason = "entity_sweep_attack";
-            }
-        else {
-            if (((Arrow) d).getShooter() instanceof Player) {
-                killer = (Player) ((Arrow) d).getShooter();
-                reason = "projectile_player";
-            } else if (((Arrow) d).getShooter() instanceof LivingEntity) {
-                killer = (LivingEntity) ((Arrow) d).getShooter();
-                reason = "projectile_living";
-            } else {
-                killer = null;
-                reason = "projectile_non_living";
-            }
-        }
-        
-        String message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToLivingEntityMessage(reason);
-        
-        message = message.replaceAll("\"", "'");
-        message = message.replaceAll("%player%", victim.getName());
-        
-        if (message.contains("%killer%") && killer != null)
-            message = message.replaceAll("%killer%", killer.getName());
-        
-        message = ChatColor.translateAlternateColorCodes('&', message);
-        
-        ComponentBuilder builder = replaceItemVar(cause, message, killer, d);
-        
-        
-        broadcast(builder.create());
+        lastDamageCause.put(player.getUniqueId(), cause);
     }
     
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
+        
+        EntityDamageEvent.DamageCause cause = lastDamageCause.get(event.getEntity().getUniqueId());
+        
         event.setDeathMessage(null);
+        
+        String message;
+        
+        if (cause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
+                && cause != EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                && cause != EntityDamageEvent.DamageCause.PROJECTILE) {
+            
+            message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToNonLivingEntityMessage(cause);
+            
+            message = message.replaceAll("\"", "'");
+            message = message.replaceAll("%player%", victim.getName());
+            
+            event.setDeathMessage(ChatColor.translateAlternateColorCodes('&', message));
+        } else {
+            Entity d = ((EntityDamageByEntityEvent) victim.getLastDamageCause()).getDamager();
+            LivingEntity killer;
+            String reason;
+            if (cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK)
+                if (d instanceof Player) {
+                    killer = ((Player) d);
+                    reason = "player_attack";
+                } else {
+                    killer = (LivingEntity) d;
+                    reason = "entity_attack";
+                }
+            else if (cause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+                if (d instanceof Player) {
+                    killer = ((Player) d);
+                    reason = "entity_sweep_attack";
+                } else {
+                    killer = (LivingEntity) d;
+                    reason = "entity_sweep_attack";
+                }
+            else {
+                if (((Arrow) d).getShooter() instanceof Player) {
+                    killer = (Player) ((Arrow) d).getShooter();
+                    reason = "projectile_player";
+                } else if (((Arrow) d).getShooter() instanceof LivingEntity) {
+                    killer = (LivingEntity) ((Arrow) d).getShooter();
+                    reason = "projectile_living";
+                } else {
+                    killer = null;
+                    reason = "projectile_non_living";
+                }
+            }
+            
+            message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToLivingEntityMessage(reason);
+            
+            message = message.replaceAll("\"", "'");
+            message = message.replaceAll("%player%", victim.getName());
+            
+            if (message.contains("%killer%") && killer != null)
+                message = message.replaceAll("%killer%",
+                        killer instanceof Player && hasMatchingItem((Player) killer) ? "Pumpkin Bandit" : killer.getName());
+            
+            message = ChatColor.translateAlternateColorCodes('&', message);
+            
+            ComponentBuilder builder = replaceItemVar(cause, message, killer, d);
+            
+            event.setDeathMessage(null);
+            
+            broadcast(builder.create());
+        }
     }
     
     @EventHandler(ignoreCancelled = true)
@@ -207,36 +200,33 @@ public class DeathMessageListener implements Listener {
         if (item.getType() == Material.AIR)
             return;
         
-        List<String> lore = item.getItemMeta().getLore();
-        if (lore == null || lore.stream().noneMatch(line -> line.contains("ID: ")))
+        if (!StatTrackItem.isStatTrackItem(item))
             return;
         
-        StatTrackID uuid = StatTrackID.fromString(lore.stream().filter(line -> line.contains("ID: ")).findFirst().get().replace("§8ID: ", ""));
+        StatTrackItem statTrackItem = StatTrackItem.getStatTrackItem(item);
         
-        if (StatTrackPlugin.instance.getStatTrackItems().stream().anyMatch(i -> i.getUUID().toString().equals(uuid.toString()))) {
-            StatTrackItem statTrackItem = StatTrackPlugin.instance.getStatTrackItems().stream().filter(s -> s.getUUID().equals(uuid)).findFirst().get();
-            if (statTrackItem instanceof StatTrackWeapon) {
-                StatTrackWeaponPath path = (StatTrackWeaponPath) statTrackItem.getPath();
-                if (path.isTrackKills())
-                    if (path.isOnlyKillsInAlinor() && isKeepInventoryRegion(victim.getLocation()))
-                        ((StatTrackWeapon) statTrackItem).addKill();
-                    else if (!path.isOnlyKillsInAlinor())
-                        ((StatTrackWeapon) statTrackItem).addKill();
-                    else
-                        return;
-                
-                int modelData = ((StatTrackWeaponPath) statTrackItem.getPath()).getProgression().getModelData(((StatTrackWeapon) statTrackItem).getKills());
-                if (modelData != -999) {
-                    ItemMeta meta = item.getItemMeta();
-                    meta.setCustomModelData(modelData);
-                    item.setItemMeta(meta);
-                    killer.updateInventory();
-                    broadcast(StatTrackPlugin.PREFIX + ChatColor.DARK_GREEN + killer.getDisplayName()
-                            + ChatColor.GREEN + " has reached a kill threshold of " + ChatColor.RED + ((StatTrackWeapon) statTrackItem).getKills()
-                            + ChatColor.GREEN + " on their StatTrack™ item!");
-                }
-            }
+        if (!(statTrackItem instanceof StatTrackWeapon))
+            return;
+        StatTrackWeaponPath path = (StatTrackWeaponPath) statTrackItem.getPath();
+        if (path.isTrackKills())
+            if (path.isOnlyKillsInAlinor() && isKeepInventoryRegion(victim.getLocation()))
+                ((StatTrackWeapon) statTrackItem).addKill();
+            else if (!path.isOnlyKillsInAlinor())
+                ((StatTrackWeapon) statTrackItem).addKill();
+            else
+                return;
+        
+        int modelData = ((StatTrackWeaponPath) statTrackItem.getPath()).getProgression().getModelData(((StatTrackWeapon) statTrackItem).getKills());
+        ItemMeta meta = item.getItemMeta();
+        meta.setLore(meta.getLore().stream().map(line -> line.contains("Kills: ") ? "§eKills: " + "§6" + ((StatTrackWeapon) statTrackItem).getKills() : line).collect(Collectors.toList()));
+        if (modelData != -999) {
+            meta.setCustomModelData(modelData);
+            broadcast(StatTrackPlugin.PREFIX + ChatColor.DARK_GREEN + killer.getDisplayName()
+                    + ChatColor.GREEN + " has reached a kill threshold of " + ChatColor.RED + ((StatTrackWeapon) statTrackItem).getKills()
+                    + ChatColor.GREEN + " on their StatTrack™ item!");
         }
+        item.setItemMeta(meta);
+        killer.updateInventory();
     }
     
     private void broadcast(String message) {
@@ -285,6 +275,11 @@ public class DeathMessageListener implements Listener {
                 
                 if (i == array.length - 1)
                     break;
+                
+                if (killer instanceof Player && hasMatchingItem((Player) killer)) {
+                    builder.append(ChatColor.MAGIC + PUMPKINBANDIT_NAME);
+                    continue;
+                }
                 
                 if (cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK || cause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                     if (killer.getEquipment() == null || killer.getEquipment().getItemInMainHand().getType() == Material.AIR)
@@ -345,5 +340,11 @@ public class DeathMessageListener implements Listener {
             }
         }
         return bool;
+    }
+    
+    private boolean hasMatchingItem(Player player) {
+        ItemStack helmet = player.getInventory().getHelmet();
+        return helmet != null && helmet.getType() == Material.CARVED_PUMPKIN && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData()
+                && helmet.getItemMeta().getCustomModelData() == PUMPKINBANDIT_MODEL_DATA;
     }
 }

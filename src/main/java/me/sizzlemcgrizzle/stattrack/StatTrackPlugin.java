@@ -10,11 +10,13 @@ import me.sizzlemcgrizzle.stattrack.path.WeaponItemProgression;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackBow;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackSword;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackTrident;
+import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -112,19 +114,21 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         if (lore == null)
             lore = new ArrayList<>();
         
-        if (lore.stream().anyMatch(line -> line.contains("ID: "))) {
+        if (StatTrackItem.isStatTrackItem(item)) {
             player.sendMessage(StatTrackPlugin.PREFIX + ChatColor.RED + "This item is already being tracked!");
             event.setCancelled(true);
             return;
         }
         
-        StatTrackID uuid = StatTrackID.randomID();
+        StatTrackID id = StatTrackID.randomID();
         
         lore.add("");
-        lore.add(ChatColor.DARK_GRAY + "ID: " + uuid.toString());
+        lore.add(ChatColor.YELLOW + "Kills: " + ChatColor.GOLD + "0");
         
         meta.setLore(lore);
         item.setItemMeta(meta);
+        
+        item = setNbtID(id, item);
         
         
         int modelData = token.getItemMeta().getCustomModelData();
@@ -132,12 +136,26 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         event.setResult(item);
         
         if (item.getType().name().contains("SWORD"))
-            addStatTrackItem(new StatTrackSword(uuid, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackSword(id, new StatTrackWeaponPath(modelData)));
         else if (item.getType().name().contains("BOW"))
-            addStatTrackItem(new StatTrackBow(uuid, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackBow(id, new StatTrackWeaponPath(modelData)));
         else if (item.getType().name().contains("TRIDENT"))
-            addStatTrackItem(new StatTrackTrident(uuid, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackTrident(id, new StatTrackWeaponPath(modelData)));
         
         player.sendMessage(StatTrackPlugin.PREFIX + "Your item is now being tracked!");
+    }
+    
+    public static ItemStack setNbtID(StatTrackID id, ItemStack item) {
+        net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
+        NBTTagCompound tag = stack.getTag() != null ? stack.getTag() : new NBTTagCompound();
+        tag.setString("stat-track-id", id.toString());
+        stack.setTag(tag);
+        
+        return CraftItemStack.asCraftMirror(stack);
+    }
+    
+    public static StatTrackID getNbtID(ItemStack item) {
+        net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
+        return stack.getTag() == null || !stack.getTag().hasKey("stat-track-id") ? null : StatTrackID.fromString(stack.getTag().getString("stat-track-id"));
     }
 }
