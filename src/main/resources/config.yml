@@ -1,6 +1,7 @@
-98:
-  change_skin: true
-  track_kills: true
-  only_kills_in_alinor: false
-  item_progression:
-    - "150KILLS 100"
+paths:
+  98:
+    change_skin: true
+    track_kills: true
+    only_kills_in_alinor: false
+    item_progression:
+      - "150KILLS 100"

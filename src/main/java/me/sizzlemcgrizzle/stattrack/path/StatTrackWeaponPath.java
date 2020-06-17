@@ -1,15 +1,12 @@
 package me.sizzlemcgrizzle.stattrack.path;
 
+import me.sizzlemcgrizzle.stattrack.ConfigPath;
 import me.sizzlemcgrizzle.stattrack.StatTrackPlugin;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
+import org.bukkit.Bukkit;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Level;
 
 public class StatTrackWeaponPath extends StatTrackItemPath {
     
@@ -21,23 +18,19 @@ public class StatTrackWeaponPath extends StatTrackItemPath {
     public StatTrackWeaponPath(int modelData) {
         super(modelData);
         
-        File file = new File(StatTrackPlugin.instance.getDataFolder(), "config.yml");
+        Optional<ConfigPath> optional = StatTrackPlugin.instance.getConfigPaths().stream().filter(p -> p.getModelData() == modelData).findFirst();
         
-        if (!file.exists())
-            try {
-                InputStream stream = StatTrackPlugin.instance.getResource("config.yml");
-                FileUtils.copyInputStreamToFile(stream, file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (!optional.isPresent()) {
+            Bukkit.getLogger().log(Level.SEVERE, "There is no path to match this weapons model data!", new NullPointerException());
+            return;
+        }
         
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection section = config.getConfigurationSection(String.valueOf(modelData));
+        ConfigPath path = optional.get();
         
-        changeSkin = section.contains("change_skin") ? section.getBoolean("change_skin") : false;
-        onlyKillsInAlinor = section.contains("only_kills_in_alinor") ? section.getBoolean("only_kills_in_alinor") : false;
-        trackKills = section.contains("track_kills") ? section.getBoolean("track_kills") : true;
-        progression = section.contains("item_progression") ? new WeaponItemProgression(section.getStringList("item_progression")) : new WeaponItemProgression(Collections.emptyList());
+        changeSkin = path.isChangeSkin();
+        onlyKillsInAlinor = path.isOnlyKillsInAlinor();
+        trackKills = path.isTrackKills();
+        progression = path.getProgression();
     }
     
     public StatTrackWeaponPath(Map<String, Object> map) {

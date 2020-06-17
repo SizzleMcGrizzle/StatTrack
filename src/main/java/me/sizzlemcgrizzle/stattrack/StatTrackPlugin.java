@@ -13,6 +13,7 @@ import me.sizzlemcgrizzle.stattrack.weapon.StatTrackTrident;
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
@@ -38,14 +39,14 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
     public static File DEATH_MESSAGE_FILE;
     public static String PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.RED + "StatTrack™" + ChatColor.DARK_GRAY + "] " + ChatColor.YELLOW;
     
-    private List<StatTrackItem> statTrackItems;
+    private List<StatTrackItem> statTrackItems = new ArrayList<>();
+    private List<ConfigPath> configPaths = new ArrayList<>();
     
     @Override
     public void onEnable() {
         instance = this;
         STAT_TRACK_ITEM_FILE = new File(this.getDataFolder(), "statTrackItems.yml");
         DEATH_MESSAGE_FILE = new File(this.getDataFolder(), "deathMessages.yml");
-        statTrackItems = new ArrayList<>();
         
         ConfigurationSerialization.registerClass(StatTrackSword.class);
         ConfigurationSerialization.registerClass(StatTrackTrident.class);
@@ -60,6 +61,7 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         getCommand("getStats").setExecutor(new GetStatsCommand());
         getCommand("getStatsByID").setExecutor(new GetStatsByIDCommand());
         
+        registerConfigPaths();
         registerItems();
     }
     
@@ -76,6 +78,26 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    private void registerConfigPaths() {
+        File file = new File(StatTrackPlugin.instance.getDataFolder(), "config.yml");
+        
+        if (!file.exists())
+            try {
+                InputStream stream = StatTrackPlugin.instance.getResource("config.yml");
+                FileUtils.copyInputStreamToFile(stream, file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        ConfigurationSection paths = config.getConfigurationSection("paths");
+        
+        if (paths == null)
+            return;
+        
+        for (String key : paths.getKeys(false))
+            configPaths.add(new ConfigPath(paths.getConfigurationSection(key)));
     }
     
     private void registerItems() {
@@ -102,11 +124,21 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         statTrackItems.add(item);
     }
     
+    public List<ConfigPath> getConfigPaths() {
+        return configPaths;
+    }
+    
     @EventHandler
     public void onModelTokenApply(ModelTokenApplyEvent event) {
         Player player = (Player) event.getPlayer();
-        ItemStack item = event.getInput();
+        ItemStack item = event.getInput().clone();
         ItemStack token = event.getToken();
+        
+        if (!token.getItemMeta().hasCustomModelData())
+            return;
+        
+        if (getConfigPaths().stream().noneMatch(path -> path.getModelData() == token.getItemMeta().getCustomModelData()))
+            return;
         
         ItemMeta meta = item.getItemMeta();
         List<String> lore = meta.getLore();
