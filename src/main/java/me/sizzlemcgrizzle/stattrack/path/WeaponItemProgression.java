@@ -2,6 +2,7 @@ package me.sizzlemcgrizzle.stattrack.path;
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class WeaponItemProgression implements ConfigurationSerializable {
     
+    //Map<Kills, CustomModelData>
     private Map<Integer, Integer> killsForDataMap = new HashMap<>();
     
     public WeaponItemProgression(List<String> progressions) {
@@ -42,6 +44,10 @@ public class WeaponItemProgression implements ConfigurationSerializable {
     
     public int getModelData(int kills) {
         return killsForDataMap.getOrDefault(kills, -999);
+    }
+    
+    public List<Integer> getKillThresholds() {
+        return new ArrayList<>(killsForDataMap.keySet());
     }
     
     

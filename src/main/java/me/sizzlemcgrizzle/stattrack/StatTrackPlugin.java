@@ -1,10 +1,8 @@
 package me.sizzlemcgrizzle.stattrack;
 
 import de.craftlancer.clstuff.premium.ModelTokenApplyEvent;
-import me.sizzlemcgrizzle.stattrack.command.GetStatsByIDCommand;
-import me.sizzlemcgrizzle.stattrack.command.GetStatsCommand;
+import me.sizzlemcgrizzle.stattrack.command.StatTrackCommandHandler;
 import me.sizzlemcgrizzle.stattrack.deathmessages.DeathMessageListener;
-import me.sizzlemcgrizzle.stattrack.deathmessages.DeathMessageUtil;
 import me.sizzlemcgrizzle.stattrack.path.StatTrackWeaponPath;
 import me.sizzlemcgrizzle.stattrack.path.WeaponItemProgression;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackBow;
@@ -35,9 +33,17 @@ import java.util.stream.Collectors;
 public class StatTrackPlugin extends JavaPlugin implements Listener {
     
     public static StatTrackPlugin instance;
+    
     public static File STAT_TRACK_ITEM_FILE;
     public static File DEATH_MESSAGE_FILE;
+    
     public static String PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.RED + "StatTrack™" + ChatColor.DARK_GRAY + "] " + ChatColor.YELLOW;
+    public static String MESSAGE_LINE = ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+" +
+            ChatColor.RESET + " " + PREFIX +
+            ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+";
+    
+    public static String DEFAULT_PERMISSION = "stattrack.default";
+    public static String ADMIN_PERMISSION = "stattrack.admin";
     
     private List<StatTrackItem> statTrackItems = new ArrayList<>();
     private List<ConfigPath> configPaths = new ArrayList<>();
@@ -57,9 +63,8 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new DeathMessageListener(), this);
         Bukkit.getPluginManager().registerEvents(this, this);
         
-        getCommand("deathMessageReload").setExecutor(new DeathMessageUtil(this));
-        getCommand("getStats").setExecutor(new GetStatsCommand());
-        getCommand("getStatsByID").setExecutor(new GetStatsByIDCommand());
+        String statTrackCommandName = "stattrack";
+        getCommand(statTrackCommandName).setExecutor(new StatTrackCommandHandler(this, statTrackCommandName));
         
         registerConfigPaths();
         registerItems();
@@ -124,6 +129,10 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         statTrackItems.add(item);
     }
     
+    public void removeStatTrackItem(StatTrackItem item) {
+        statTrackItems.remove(item);
+    }
+    
     public List<ConfigPath> getConfigPaths() {
         return configPaths;
     }
@@ -134,7 +143,7 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         ItemStack item = event.getInput().clone();
         ItemStack token = event.getToken();
         
-        if (!token.getItemMeta().hasCustomModelData())
+        if (token == null || !token.hasItemMeta() || !token.getItemMeta().hasCustomModelData())
             return;
         
         if (getConfigPaths().stream().noneMatch(path -> path.getModelData() == token.getItemMeta().getCustomModelData()))
@@ -168,11 +177,11 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         event.setResult(item);
         
         if (item.getType().name().contains("SWORD"))
-            addStatTrackItem(new StatTrackSword(id, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackSword(id, new StatTrackWeaponPath(modelData), item));
         else if (item.getType().name().contains("BOW"))
-            addStatTrackItem(new StatTrackBow(id, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackBow(id, new StatTrackWeaponPath(modelData), item));
         else if (item.getType().name().contains("TRIDENT"))
-            addStatTrackItem(new StatTrackTrident(id, new StatTrackWeaponPath(modelData)));
+            addStatTrackItem(new StatTrackTrident(id, new StatTrackWeaponPath(modelData), item));
         
         player.sendMessage(StatTrackPlugin.PREFIX + "Your item is now being tracked!");
     }

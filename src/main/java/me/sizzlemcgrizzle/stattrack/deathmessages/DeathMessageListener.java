@@ -208,13 +208,15 @@ public class DeathMessageListener implements Listener {
         if (!(statTrackItem instanceof StatTrackWeapon))
             return;
         StatTrackWeaponPath path = (StatTrackWeaponPath) statTrackItem.getPath();
-        if (path.isTrackKills())
+        if (path.isTrackKills()) {
             if (path.isOnlyKillsInAlinor() && isKeepInventoryRegion(victim.getLocation()))
                 ((StatTrackWeapon) statTrackItem).addKill();
             else if (!path.isOnlyKillsInAlinor())
                 ((StatTrackWeapon) statTrackItem).addKill();
             else
                 return;
+        } else
+            return;
         
         int modelData = ((StatTrackWeaponPath) statTrackItem.getPath()).getProgression().getModelData(((StatTrackWeapon) statTrackItem).getKills());
         ItemMeta meta = item.getItemMeta();
@@ -310,7 +312,7 @@ public class DeathMessageListener implements Listener {
         component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new BaseComponent[]{NMSUtils.getItemHoverComponent(item)}));
         
         if (StatTrackItem.isStatTrackItem(item))
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/getstatsbyid " + StatTrackItem.getStatTrackItem(item).getUUID().toString()));
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/stattrack getStatsByID " + StatTrackItem.getStatTrackItem(item).getUUID().toString()));
         return component;
     }
     

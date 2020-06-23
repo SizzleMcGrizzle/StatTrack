@@ -7,9 +7,7 @@ depend:
   - WorldGuard
   - CLStuff
 commands:
-  deathMessageReload:
-    description: Reloads death messages from file
-  getStats:
-    description: Gets the item statistics for the item in hand
-  getStatsByID:
-    description: Gets the item statistics for the specified UUID
+  stattrack:
+    description: Main command group
+    usage: /stattrack
+    aliases: [st]

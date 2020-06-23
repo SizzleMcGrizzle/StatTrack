@@ -1,21 +1,21 @@
 package me.sizzlemcgrizzle.stattrack.deathmessages;
 
+import de.craftlancer.core.command.SubCommand;
 import me.sizzlemcgrizzle.stattrack.StatTrackPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.plugin.Plugin;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DeathMessageUtil implements CommandExecutor {
+public class DeathMessageUtil extends SubCommand {
     
     private File file;
     
@@ -79,7 +79,9 @@ public class DeathMessageUtil implements CommandExecutor {
     //Damage caused by Wither potion effect
     private static String WITHER;
     
-    public DeathMessageUtil(StatTrackPlugin plugin) {
+    public DeathMessageUtil(Plugin plugin) {
+        super(StatTrackPlugin.ADMIN_PERMISSION, plugin, true);
+        
         this.file = new File(plugin.getDataFolder(), "deathMessages.yml");
         
         deserialize();
@@ -206,19 +208,21 @@ public class DeathMessageUtil implements CommandExecutor {
     }
     
     @Override
-    public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String s, @Nonnull String[] args) {
+    protected String execute(CommandSender sender, Command command, String s, String[] args) {
         if (!(sender instanceof Player))
-            return false;
+            return "You must be a player to use this commnad!";
         
         Player player = (Player) sender;
         
-        if (!player.hasPermission("clstuff.reloaddeathmessages"))
-            return false;
+        if (!player.hasPermission(StatTrackPlugin.ADMIN_PERMISSION))
+            return StatTrackPlugin.PREFIX + "You do not have permission to use this command.";
         
         deserialize();
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', PREFIX + "&aReloaded death messages."));
-        
-        return true;
+        return ChatColor.translateAlternateColorCodes('&', PREFIX + "&aReloaded death messages.");
     }
     
+    @Override
+    public void help(CommandSender commandSender) {
+    
+    }
 }

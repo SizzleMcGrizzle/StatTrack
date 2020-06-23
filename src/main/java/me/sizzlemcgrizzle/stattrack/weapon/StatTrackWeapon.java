@@ -5,6 +5,7 @@ import me.sizzlemcgrizzle.stattrack.StatTrackItem;
 import me.sizzlemcgrizzle.stattrack.StatTrackPlugin;
 import me.sizzlemcgrizzle.stattrack.path.StatTrackWeaponPath;
 import org.bukkit.ChatColor;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,29 +15,28 @@ import java.util.Map;
 public abstract class StatTrackWeapon extends StatTrackItem {
     
     private List<String> statsDisplay = Arrays.asList(
-            ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+" +
-                    ChatColor.RESET + " " + StatTrackPlugin.PREFIX +
-                    ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+",
+            StatTrackPlugin.MESSAGE_LINE,
             "",
             ChatColor.GRAY + " - " + ChatColor.GOLD + "Kills: " + ChatColor.YELLOW + "%kills%",
             "",
-            ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+" +
-                    ChatColor.RESET + " " + StatTrackPlugin.PREFIX +
-                    ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "+--------+"
+            StatTrackPlugin.MESSAGE_LINE
     );
     
     private int kills;
+    private StatTrackWeaponGUI inventory;
     
-    public StatTrackWeapon(StatTrackID uuid, StatTrackWeaponPath path) {
-        super(uuid, path);
+    public StatTrackWeapon(StatTrackID uuid, StatTrackWeaponPath path, ItemStack item) {
+        super(uuid, path, item);
         
         this.kills = 0;
+        this.inventory = new StatTrackWeaponGUI(this);
     }
     
     public StatTrackWeapon(Map<String, Object> map) {
         super(map);
         
-        kills = (int) map.get("kills");
+        this.kills = (int) map.get("kills");
+        this.inventory = new StatTrackWeaponGUI(this);
     }
     
     @Override
@@ -54,6 +54,10 @@ public abstract class StatTrackWeapon extends StatTrackItem {
     
     public void addKill() {
         kills++;
+    }
+    
+    public StatTrackWeaponGUI getInventory() {
+        return inventory;
     }
     
     @Override
