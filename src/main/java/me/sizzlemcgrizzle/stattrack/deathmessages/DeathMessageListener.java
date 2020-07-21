@@ -86,7 +86,8 @@ public class DeathMessageListener implements Listener {
         
         if (cause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
                 && cause != EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                && cause != EntityDamageEvent.DamageCause.PROJECTILE) {
+                && cause != EntityDamageEvent.DamageCause.PROJECTILE
+                && cause != EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
             
             message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToNonLivingEntityMessage(cause);
             
@@ -114,6 +115,14 @@ public class DeathMessageListener implements Listener {
                     killer = (LivingEntity) d;
                     reason = "entity_sweep_attack";
                 }
+            else if (cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)
+                if (d instanceof LivingEntity) {
+                    killer = (LivingEntity) d;
+                    reason = "entity_explosion";
+                } else {
+                    killer = null;
+                    reason = "entity_explosion";
+                }
             else {
                 if (((Arrow) d).getShooter() instanceof Player) {
                     killer = (Player) ((Arrow) d).getShooter();
@@ -127,7 +136,7 @@ public class DeathMessageListener implements Listener {
                 }
             }
             
-            message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToLivingEntityMessage(reason);
+            message = DeathMessageUtil.PREFIX + DeathMessageUtil.getDeathToLivingEntityMessage(reason, killer);
             
             message = message.replaceAll("\"", "'");
             message = message.replaceAll("%player%", victim.getName());

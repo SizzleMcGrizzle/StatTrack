@@ -13,7 +13,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,13 +28,6 @@ public class StatTrackWeaponGUI {
     public StatTrackWeaponGUI(StatTrackWeapon weapon) {
         this.weapon = weapon;
         this.path = (StatTrackWeaponPath) weapon.getPath();
-        
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                createInventory();
-            }
-        }.runTaskLater(StatTrackPlugin.instance, 40);
     }
     
     public InventoryHolder getInventory() {

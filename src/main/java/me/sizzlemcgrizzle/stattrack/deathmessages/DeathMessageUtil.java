@@ -7,82 +7,82 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Random;
 
 public class DeathMessageUtil extends SubCommand {
     
-    private File file;
+    private static YamlConfiguration config;
     
     static String PREFIX;
     //Damage caused by being in the area when a block explodes.
-    private static String BLOCK_EXPLOSION;
+    private static List<String> BLOCK_EXPLOSION;
     //Damage caused when an entity contacts a block such as a Cactus.
-    private static String CONTACT;
+    private static List<String> CONTACT;
     //Damage caused when an entity is colliding with too many entities due to the maxEntityCramming game rule.
-    private static String CRAMMING;
+    private static List<String> CRAMMING;
     //Custom damage.
-    private static String CUSTOM;
+    private static List<String> CUSTOM;
     //Damage caused by a dragon breathing fire.
-    private static String DRAGON_BREATH;
+    private static List<String> DRAGON_BREATH;
     //Damage caused by running out of air while in water
-    private static String DROWNING;
+    private static List<String> DROWNING;
     //Damage caused when an player attacks another player.
-    private static String PLAYER_ATTACK;
+    private static List<String> PLAYER_ATTACK;
     //Damage caused when a non player living entity attacks a player
-    private static String ENTITY_ATTACK;
+    private static List<String> ENTITY_ATTACK;
     //Damage caused by being in the area when an entity, such as a Creeper, explodes.
-    private static String ENTITY_EXPLOSION;
+    private static List<String> ENTITY_EXPLOSION;
     //Damage caused when an entity attacks another entity in a sweep attack.
-    private static String ENTITY_SWEEP_ATTACK;
+    private static List<String> ENTITY_SWEEP_ATTACK;
     //Damage caused when an entity falls a distance greater than 3 blocks
-    private static String FALL;
+    private static List<String> FALL;
     //Damage caused by being hit by a falling block which deals damage
-    private static String FALLING_BLOCK;
+    private static List<String> FALLING_BLOCK;
     //Damage caused by direct exposure to fire
-    private static String FIRE;
+    private static List<String> FIRE;
     //Damage caused due to burns caused by fire
-    private static String FIRE_TICK;
+    private static List<String> FIRE_TICK;
     //Damage caused when an entity runs into a wall.
-    private static String FLY_INTO_WALL;
+    private static List<String> FLY_INTO_WALL;
     //Damage caused when an entity steps on Material.MAGMA_BLOCK.
-    private static String HOT_FLOOR;
+    private static List<String> HOT_FLOOR;
     //Damage caused by direct exposure to lava
-    private static String LAVA;
+    private static List<String> LAVA;
     //Damage caused by being struck by lightning
-    private static String LIGHTNING;
+    private static List<String> LIGHTNING;
     //Damage caused by being hit by a damage potion or spell
-    private static String MAGIC;
+    private static List<String> MAGIC;
     //Damage caused due to an ongoing poison effect
-    private static String POISON;
+    private static List<String> POISON;
     //Damage caused by a projectile shot by a player
-    private static String PROJECTILE_PLAYER;
+    private static List<String> PROJECTILE_PLAYER;
     //Damage caused by a projectile shot by a non-player living entity
-    private static String PROJECTILE_LIVING;
+    private static List<String> PROJECTILE_LIVING;
     //Damage caused by a non living entity shooting a projectile.
-    private static String PROJECTILE_NOT_LIVING;
+    private static List<String> PROJECTILE_NOT_LIVING;
     //Damage caused by starving due to having an empty hunger bar
-    private static String STARVATION;
+    private static List<String> STARVATION;
     //Damage caused by being put in a block
-    private static String SUFFOCATION;
+    private static List<String> SUFFOCATION;
     //Damage caused by committing suicide using the command "/kill"
-    private static String SUICIDE;
+    private static List<String> SUICIDE;
     //Damage caused in retaliation to another attack by the Thorns enchantment.
-    private static String THORNS;
+    private static List<String> THORNS;
     //Damage caused by falling into the void
-    private static String VOID;
+    private static List<String> VOID;
     //Damage caused by Wither potion effect
-    private static String WITHER;
+    private static List<String> WITHER;
     
     public DeathMessageUtil(Plugin plugin) {
         super(StatTrackPlugin.ADMIN_PERMISSION, plugin, true);
-        
-        this.file = new File(plugin.getDataFolder(), "deathMessages.yml");
         
         deserialize();
     }
@@ -90,121 +90,122 @@ public class DeathMessageUtil extends SubCommand {
     private void deserialize() {
         if (!StatTrackPlugin.DEATH_MESSAGE_FILE.exists())
             try {
+                System.out.println("hi");
                 InputStream stream = StatTrackPlugin.instance.getResource("deathMessages.yml");
                 FileUtils.copyInputStreamToFile(stream, StatTrackPlugin.DEATH_MESSAGE_FILE);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        config = YamlConfiguration.loadConfiguration(StatTrackPlugin.DEATH_MESSAGE_FILE);
         
         PREFIX = config.getString("prefix");
-        CONTACT = config.getString("contact");
-        PLAYER_ATTACK = config.getString("player_attack");
-        ENTITY_ATTACK = config.getString("entity_attack");
-        ENTITY_SWEEP_ATTACK = config.getString("entity_sweep_attack");
-        PROJECTILE_PLAYER = config.getString("projectile_player");
-        PROJECTILE_LIVING = config.getString("projectile_living");
-        PROJECTILE_NOT_LIVING = config.getString("projectile_not_living");
-        SUFFOCATION = config.getString("suffocation");
-        FALL = config.getString("fall");
-        FIRE = config.getString("fire");
-        FIRE_TICK = config.getString("fire_tick");
-        LAVA = config.getString("lava");
-        DROWNING = config.getString("drowning");
-        BLOCK_EXPLOSION = config.getString("block_explosion");
-        ENTITY_EXPLOSION = config.getString("entity_explosion");
-        VOID = config.getString("void");
-        LIGHTNING = config.getString("lightning");
-        SUICIDE = config.getString("suicide");
-        STARVATION = config.getString("suicide");
-        POISON = config.getString("poison");
-        MAGIC = config.getString("magic");
-        WITHER = config.getString("wither");
-        FALLING_BLOCK = config.getString("falling_block");
-        THORNS = config.getString("thorns");
-        DRAGON_BREATH = config.getString("dragon_breath");
-        CUSTOM = config.getString("custom");
-        FLY_INTO_WALL = config.getString("fly_into_wall");
-        HOT_FLOOR = config.getString("hot_floor");
-        CRAMMING = config.getString("cramming");
-        
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        CONTACT = config.getStringList("contact");
+        PLAYER_ATTACK = config.getStringList("player_attack");
+        ENTITY_ATTACK = config.getStringList("entity_attack");
+        ENTITY_SWEEP_ATTACK = config.getStringList("entity_sweep_attack");
+        PROJECTILE_PLAYER = config.getStringList("projectile_player");
+        PROJECTILE_LIVING = config.getStringList("projectile_living");
+        PROJECTILE_NOT_LIVING = config.getStringList("projectile_not_living");
+        SUFFOCATION = config.getStringList("suffocation");
+        FALL = config.getStringList("fall");
+        FIRE = config.getStringList("fire");
+        FIRE_TICK = config.getStringList("fire_tick");
+        LAVA = config.getStringList("lava");
+        DROWNING = config.getStringList("drowning");
+        BLOCK_EXPLOSION = config.getStringList("block_explosion");
+        ENTITY_EXPLOSION = config.getStringList("entity_explosion");
+        VOID = config.getStringList("void");
+        LIGHTNING = config.getStringList("lightning");
+        SUICIDE = config.getStringList("suicide");
+        STARVATION = config.getStringList("suicide");
+        POISON = config.getStringList("poison");
+        MAGIC = config.getStringList("magic");
+        WITHER = config.getStringList("wither");
+        FALLING_BLOCK = config.getStringList("falling_block");
+        THORNS = config.getStringList("thorns");
+        DRAGON_BREATH = config.getStringList("dragon_breath");
+        CUSTOM = config.getStringList("custom");
+        FLY_INTO_WALL = config.getStringList("fly_into_wall");
+        HOT_FLOOR = config.getStringList("hot_floor");
+        CRAMMING = config.getStringList("cramming");
     }
     
     static String getDeathToNonLivingEntityMessage(EntityDamageEvent.DamageCause cause) {
         switch (cause) {
             case BLOCK_EXPLOSION:
-                return BLOCK_EXPLOSION;
+                return getRandom(BLOCK_EXPLOSION);
             case FALL:
-                return FALL;
+                return getRandom(FALL);
             case FALLING_BLOCK:
-                return FALLING_BLOCK;
+                return getRandom(FALLING_BLOCK);
             case FIRE:
-                return FIRE;
+                return getRandom(FIRE);
             case LAVA:
-                return LAVA;
+                return getRandom(LAVA);
             case VOID:
-                return VOID;
+                return getRandom(VOID);
             case MAGIC:
-                return MAGIC;
+                return getRandom(MAGIC);
             case CUSTOM:
-                return CUSTOM;
+                return getRandom(CUSTOM);
             case POISON:
-                return POISON;
+                return getRandom(POISON);
             case THORNS:
-                return THORNS;
+                return getRandom(THORNS);
             case WITHER:
-                return WITHER;
+                return getRandom(WITHER);
             case CONTACT:
-                return CONTACT;
+                return getRandom(CONTACT);
             case SUICIDE:
-                return SUICIDE;
+                return getRandom(SUICIDE);
             case CRAMMING:
-                return CRAMMING;
+                return getRandom(CRAMMING);
             case DROWNING:
-                return DROWNING;
+                return getRandom(DROWNING);
             case FIRE_TICK:
-                return FIRE_TICK;
+                return getRandom(FIRE_TICK);
             case HOT_FLOOR:
-                return HOT_FLOOR;
+                return getRandom(HOT_FLOOR);
             case LIGHTNING:
-                return LIGHTNING;
+                return getRandom(LIGHTNING);
             case STARVATION:
-                return STARVATION;
+                return getRandom(STARVATION);
             case SUFFOCATION:
-                return SUFFOCATION;
+                return getRandom(SUFFOCATION);
             case DRAGON_BREATH:
-                return DRAGON_BREATH;
+                return getRandom(DRAGON_BREATH);
             case FLY_INTO_WALL:
-                return FLY_INTO_WALL;
+                return getRandom(FLY_INTO_WALL);
             case ENTITY_EXPLOSION:
-                return ENTITY_EXPLOSION;
+                return getRandom(ENTITY_EXPLOSION);
             default:
                 return "%player% died";
         }
     }
     
-    static String getDeathToLivingEntityMessage(String cause) {
+    static String getDeathToLivingEntityMessage(String cause, Entity killer) {
         switch (cause.toUpperCase()) {
             case "PLAYER_ATTACK":
-                return PLAYER_ATTACK;
+                return getRandom(PLAYER_ATTACK);
+            case "ENTITY_EXPLOSION":
+                return killer != null && config.contains(killer.getName().toLowerCase()) ? getRandom(config.getStringList(killer.getName().toLowerCase())) : getRandom(ENTITY_EXPLOSION);
             case "ENTITY_ATTACK":
-                return ENTITY_ATTACK;
-            case "ENTITY_SWEEP_ATTACK":
-                return ENTITY_SWEEP_ATTACK;
-            case "PROJECTILE_PLAYER":
-                return PROJECTILE_PLAYER;
+                return config.contains(killer.getName().toLowerCase()) ? getRandom(config.getStringList(killer.getName().toLowerCase())) : getRandom(ENTITY_ATTACK);
             case "PROJECTILE_LIVING":
-                return PROJECTILE_LIVING;
+                return config.contains(killer.getName().toLowerCase()) ? getRandom(config.getStringList(killer.getName().toLowerCase())) : getRandom(PROJECTILE_LIVING);
+            case "ENTITY_SWEEP_ATTACK":
+                return getRandom(ENTITY_SWEEP_ATTACK);
+            case "PROJECTILE_PLAYER":
+                return getRandom(PROJECTILE_PLAYER);
             case "PROJECTILE_NON_LIVING":
-                return PROJECTILE_NOT_LIVING;
+                return getRandom(PROJECTILE_NOT_LIVING);
             default:
                 return "%player% died";
         }
+    }
+    
+    private static String getRandom(List<String> list) {
+        return list.get(new Random().nextInt(list.size()));
     }
     
     @Override

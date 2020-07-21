@@ -44,12 +44,7 @@ public class StatTrackID {
     
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof StatTrackID)) {
-            if (obj instanceof String)
-                return obj.toString().equals(toString());
-            return false;
-        }
-        return toString().equals(obj.toString());
+        return (obj instanceof String || obj instanceof StatTrackID) && toString().equals(obj.toString());
     }
     
     public boolean equals(String string) {

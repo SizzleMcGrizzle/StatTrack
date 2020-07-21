@@ -4,6 +4,7 @@ import de.craftlancer.core.Utils;
 import de.craftlancer.core.command.SubCommand;
 import me.sizzlemcgrizzle.stattrack.StatTrackItem;
 import me.sizzlemcgrizzle.stattrack.StatTrackPlugin;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -37,8 +38,8 @@ public class StatTrackClearCommand extends SubCommand {
         
         StatTrackPlugin.instance.removeStatTrackItem(statTrackItem);
         
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 2F);
-        return StatTrackPlugin.PREFIX + "You have removed a stat track item.";
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5F, 2F);
+        return StatTrackPlugin.PREFIX + ChatColor.GREEN + "Item removal successful.";
     }
     
     @Override

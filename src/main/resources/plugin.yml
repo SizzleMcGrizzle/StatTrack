@@ -3,11 +3,8 @@ main: me.sizzlemcgrizzle.stattrack.StatTrackPlugin
 api-version: 1.14
 author: sizzlemcgrizzle
 version: ${project.version}
-depend:
-  - WorldGuard
-  - CLStuff
+depend: [WorldGuard, CLStuff]
 commands:
   stattrack:
     description: Main command group
-    usage: /stattrack
     aliases: [st]

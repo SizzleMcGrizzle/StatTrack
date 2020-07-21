@@ -63,8 +63,7 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new DeathMessageListener(), this);
         Bukkit.getPluginManager().registerEvents(this, this);
         
-        String statTrackCommandName = "stattrack";
-        getCommand(statTrackCommandName).setExecutor(new StatTrackCommandHandler(this, statTrackCommandName));
+        getCommand("stattrack").setExecutor(new StatTrackCommandHandler(this));
         
         registerConfigPaths();
         registerItems();
@@ -72,7 +71,7 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
     
     @Override
     public void onDisable() {
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(STAT_TRACK_ITEM_FILE);
+        YamlConfiguration config = new YamlConfiguration();
         
         config.set("swords", statTrackItems.stream().filter(item -> item instanceof StatTrackSword).collect(Collectors.toList()));
         config.set("bows", statTrackItems.stream().filter(item -> item instanceof StatTrackBow).collect(Collectors.toList()));
