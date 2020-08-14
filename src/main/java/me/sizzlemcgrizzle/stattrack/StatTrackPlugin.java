@@ -1,6 +1,7 @@
 package me.sizzlemcgrizzle.stattrack;
 
 import de.craftlancer.clstuff.premium.ModelTokenApplyEvent;
+import de.craftlancer.core.util.ItemBuilder;
 import me.sizzlemcgrizzle.stattrack.command.StatTrackCommandHandler;
 import me.sizzlemcgrizzle.stattrack.deathmessages.DeathMessageListener;
 import me.sizzlemcgrizzle.stattrack.path.StatTrackWeaponPath;
@@ -8,19 +9,19 @@ import me.sizzlemcgrizzle.stattrack.path.WeaponItemProgression;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackBow;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackSword;
 import me.sizzlemcgrizzle.stattrack.weapon.StatTrackTrident;
-import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -168,7 +169,7 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         meta.setLore(lore);
         item.setItemMeta(meta);
         
-        item = setNbtID(id, item);
+        item = new ItemBuilder(item).addPersistentData(StatTrackPlugin.instance, "stat-track-id", id.toString()).build();
         
         
         int modelData = token.getItemMeta().getCustomModelData();
@@ -185,17 +186,13 @@ public class StatTrackPlugin extends JavaPlugin implements Listener {
         player.sendMessage(StatTrackPlugin.PREFIX + "Your item is now being tracked!");
     }
     
-    public static ItemStack setNbtID(StatTrackID id, ItemStack item) {
-        net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound tag = stack.getTag() != null ? stack.getTag() : new NBTTagCompound();
-        tag.setString("stat-track-id", id.toString());
-        stack.setTag(tag);
-        
-        return CraftItemStack.asCraftMirror(stack);
-    }
-    
     public static StatTrackID getNbtID(ItemStack item) {
-        net.minecraft.server.v1_15_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
-        return stack.getTag() == null || !stack.getTag().hasKey("stat-track-id") ? null : StatTrackID.fromString(stack.getTag().getString("stat-track-id"));
+        NamespacedKey namespacedKey = new NamespacedKey(StatTrackPlugin.instance, "stat-track-id");
+        try {
+            String id = item.getItemMeta().getPersistentDataContainer().get(namespacedKey, PersistentDataType.STRING);
+            return StatTrackID.fromString(id);
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 }
